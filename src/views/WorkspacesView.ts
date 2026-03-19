@@ -1,0 +1,69 @@
+export class WorkspacesView {
+  static render(showDots: boolean = false, _currentPage: string = "workspaces"): string {
+    return `
+      <div class="view-workspaces">
+        ${showDots ? `
+        <div class="landing-dots landing-dots-fixed">
+          <span class="landing-dot" data-page="landing" title="Landing"></span>
+          <span class="landing-dot" data-page="dashboard" title="Dashboard"></span>
+          <span class="landing-dot active" data-page="workspaces" title="Workspaces"></span>
+        </div>
+        ` : ''}
+        
+        <div class="view-header">
+          <h1 class="view-title">Workspaces</h1>
+          <span class="view-subtitle">Manage your saved workspace layouts</span>
+        </div>
+
+        <div class="workspaces-section">
+          <div class="workspaces-grid">
+            ${this.renderWorkspaceCard("New Workspace", "create")}
+          </div>
+          
+          <div class="workspaces-saved">
+            <h2 class="section-title">Saved Workspaces</h2>
+            <div class="saved-workspaces-list" id="saved-workspaces">
+              <div class="empty-state">No saved workspaces yet</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  private static renderWorkspaceCard(title: string, action: string): string {
+    return `
+      <div class="workspace-card empty" data-action="${action}">
+        <div class="workspace-add">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          <span>${title}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  static mount(callbacks?: { onPageChange?: (page: string) => void }): void {
+    // Attach page dot listeners if provided
+    if (callbacks?.onPageChange) {
+      document.querySelectorAll(".view-workspaces .landing-dot").forEach((dot) => {
+        dot.addEventListener("click", () => {
+          const page = dot.getAttribute("data-page");
+          if (page) callbacks.onPageChange!(page);
+        });
+      });
+    }
+
+    // Workspace card click handler
+    document.querySelectorAll(".workspace-card").forEach((card) => {
+      card.addEventListener("click", () => {
+        const action = card.getAttribute("data-action");
+        if (action === "create") {
+          // TODO: Implement workspace creation
+          console.log("Create new workspace");
+        }
+      });
+    });
+  }
+}
