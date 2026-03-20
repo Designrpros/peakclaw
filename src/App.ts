@@ -1,40 +1,53 @@
-import { TabBar } from "./components/TabBar";
 import { TitleBar } from "./components/TitleBar";
-import { DashboardView } from "./views/DashboardView";
+import { TabBar } from "./components/TabBar";
+import { GlobalToolbar } from "./components/GlobalToolbar";
+import { LandingView } from "./views/LandingView";
+import { WorkspacesView } from "./views/WorkspacesView";
 import { ChatView } from "./views/ChatView";
 import { BrowserView } from "./views/BrowserView";
 import { SettingsView } from "./views/SettingsView";
-import { LandingView } from "./views/LandingView";
-import { WorkspacesView } from "./views/WorkspacesView";
-import type { Tab, TabType } from "./lib/types";
-import type { InputMode } from "./views/LandingView";
+import { TasksView } from "./views/TasksView";
+import { AGENTS } from "./lib/constants";
+import { renderDashboardView, mountDashboardView } from "./views/DashboardView";
+import { invoke } from "@tauri-apps/api/core";
 
-type PageView = "landing" | "dashboard" | "workspaces";
+type RootView = "landing" | "dashboard" | "workspaces";
+type TabType = "landing" | "chat" | "browser" | "settings" | "tasks" | "note";
+
+interface Tab {
+  id: string;
+  title: string;
+  type: TabType;
+}
 
 export class App {
-  // Feature tabs (Chat, Browser, Settings)
   private tabs: Tab[] = [];
-  private activeTab: string | null = null;
-  
-  // Root page views
-  private currentPage: PageView = "landing";
-  
-  private isDarkMode: boolean = false;
+  private activeTab: string = "";
+  private selectedAgent: string = "alcatelz";
+  private currentRootView: RootView = "landing";
 
   constructor() {
-    const saved = localStorage.getItem("peakclaw-theme");
-    this.isDarkMode = saved === "dark" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    this.openTab("landing");
   }
 
   render(): string {
     return `
-      <div class="app-container" data-theme="${this.isDarkMode ? "dark" : "light"}">
+      <div class="app-container">
         ${TitleBar.render()}
+        <div class="toolbar-container">
+          ${GlobalToolbar.render()}
+        </div>
         <div class="tab-bar-container">
-          ${TabBar.render(this.tabs, this.activeTab || "", true)}
+          ${TabBar.render(this.tabs, this.activeTab, true)}
         </div>
         <div class="content-area" id="content-area">
-          ${this.renderCurrent()}
+          ${this.renderContent()}
+        </div>
+        
+        <div class="bottom-nav-bar" id="bottom-nav">
+          <button class="bottom-nav-dot ${this.currentRootView === "landing" ? "active" : ""}" data-view="landing" title="Landing"></button>
+          <button class="bottom-nav-dot ${this.currentRootView === "dashboard" ? "active" : ""}" data-view="dashboard" title="Dashboard"></button>
+          <button class="bottom-nav-dot ${this.currentRootView === "workspaces" ? "active" : ""}" data-view="workspaces" title="Workspaces"></button>
         </div>
       </div>
     `;
@@ -43,194 +56,140 @@ export class App {
   mount(): void {
     TitleBar.mount();
     this.attachTabBar();
-    this.mountCurrent();
+    this.mountGlobalToolbar();
+    this.mountBottomNav();
+    this.mountContent();
   }
 
-  // Render what should currently be shown
-  private renderCurrent(): string {
-    // Feature tabs take priority over root pages
-    if (this.activeTab && this.tabs.length > 0) {
-      return this.renderTabContent();
-    }
-    return this.renderPage();
-  }
+  private renderContent(): string {
+    const tab = this.tabs.find(t => t.id === this.activeTab);
+    if (!tab || tab.type !== "landing") return ChatView.render(this.selectedAgent);
 
-  // Render a root page (Landing, Dashboard, Workspaces)
-  private renderPage(): string {
-    switch (this.currentPage) {
-      case "landing":
-        return LandingView.render(this.currentPage);
-      case "dashboard":
-        return DashboardView.render(true, this.currentPage);
-      case "workspaces":
-        return WorkspacesView.render(true, this.currentPage);
-      default:
-        return LandingView.render("landing");
+    switch (this.currentRootView) {
+      case "dashboard": return renderDashboardView();
+      case "workspaces": return WorkspacesView.render();
+      default: return LandingView.render(this.currentRootView);
     }
   }
 
-  // Render a feature tab content
-  private renderTabContent(): string {
-    const tab = this.tabs.find((t) => t.id === this.activeTab);
-    if (!tab) return this.renderPage();
-
-    switch (tab.type) {
-      case "chat": return ChatView.render();
-      case "browser": return BrowserView.render();
-      case "settings": return SettingsView.render();
-      default: return ChatView.render();
-    }
-  }
-
-  private mountCurrent(): void {
-    if (this.activeTab && this.tabs.length > 0) {
-      this.mountTab();
-    } else {
-      this.mountPage();
-    }
-  }
-
-  private mountPage(): void {
-    switch (this.currentPage) {
-      case "landing":
-        LandingView.mount({
-          onAction: (mode: InputMode) => this.handleLandingAction(mode),
-          onOpenSettings: () => this.addTab("settings"),
-          onPageChange: (page: PageView) => {
-            this.currentPage = page;
-            this.refresh();
-          },
-          currentPage: this.currentPage,
-        });
-        break;
-      case "dashboard":
-        DashboardView.mount({
-          onPageChange: (page) => {
-            this.currentPage = page as PageView;
-            this.refresh();
-          },
-        });
-        break;
-      case "workspaces":
-        WorkspacesView.mount({
-          onPageChange: (page) => {
-            this.currentPage = page as PageView;
-            this.refresh();
-          },
-        });
-        break;
-    }
-  }
-
-  private mountTab(): void {
-    const tab = this.tabs.find((t) => t.id === this.activeTab);
-    if (!tab) return;
-
-    switch (tab.type) {
-      case "chat": ChatView.mount(); break;
-      case "browser": BrowserView.mount(); break;
-      case "settings": SettingsView.mount(); break;
-    }
-  }
-
-  // Handle landing page actions - switch pages OR open tabs
-  private handleLandingAction(mode: InputMode): void {
-    switch (mode) {
-      case "Dashboard":
-        this.currentPage = "dashboard";
-        this.refresh();
-        break;
-      case "Workspaces":
-        this.currentPage = "workspaces";
-        this.refresh();
-        break;
-      case "Chat":
-        this.addTab("chat");
-        break;
-      case "Browser":
-        this.addTab("browser");
-        break;
-      case "Settings":
-        this.addTab("settings");
-        break;
-      default:
-        this.addTab("chat");
-    }
+  private openTab(type: TabType): void {
+    const titles: Record<TabType, string> = {
+      landing: "Landing",
+      chat: "Chat",
+      browser: "Browser",
+      settings: "Settings",
+      tasks: "Tasks",
+      note: "Note",
+    };
+    const id = "tab-" + Date.now();
+    this.tabs.push({ id, title: titles[type], type });
+    this.activeTab = id;
   }
 
   private attachTabBar(): void {
-    TabBar.mount(this.tabs, this.activeTab || "", {
-      onSelect: (id: string) => {
+    TabBar.mount(this.tabs, this.activeTab, {
+      onSelect: (id) => {
         this.activeTab = id;
-        this.refresh();
+        this.mountContent();
       },
-      onClose: (id: string) => {
-        this.closeTab(id);
+      onClose: (id) => {
+        this.tabs = this.tabs.filter(t => t.id !== id);
+        if (this.tabs.length === 0) this.openTab("landing");
+        else if (this.activeTab === id) this.activeTab = this.tabs[this.tabs.length - 1].id;
+        this.mountContent();
       },
       onAdd: () => {
-        this.addNewTab();
-      },
-      onThemeToggle: () => {
-        this.toggleTheme();
+        this.openTab("landing");
+        this.mountContent();
       },
     });
   }
 
-  private toggleTheme(): void {
-    this.isDarkMode = !this.isDarkMode;
-    document.querySelector(".app-container")?.setAttribute("data-theme", this.isDarkMode ? "dark" : "light");
-    localStorage.setItem("peakclaw-theme", this.isDarkMode ? "dark" : "light");
+  private mountGlobalToolbar(): void {
+    GlobalToolbar.mount({
+      onSearch: (query) => {
+        if (query) {
+          (window as any).__browserQuery = query;
+          this.openTab("browser");
+          this.mountContent();
+        }
+      },
+      onNewTab: () => {
+        this.openTab("landing");
+        this.mountContent();
+      },
+      onInspector: (type) => console.log("Inspector:", type),
+    });
   }
 
-  private updateTabBar(): void {
-    const container = document.querySelector(".tab-bar-container")!;
-    container.innerHTML = this.tabs.length > 0 ? TabBar.render(this.tabs, this.activeTab!, true) : "";
-    this.attachTabBar();
+  private mountBottomNav(): void {
+    document.querySelectorAll(".bottom-nav-dot").forEach(dot => {
+      dot.addEventListener("click", () => {
+        const view = (dot as HTMLElement).dataset.view as RootView;
+        if (view) {
+          this.currentRootView = view;
+          this.updateNavDots();
+          // Re-render content area
+          const contentArea = document.getElementById("content-area");
+          if (contentArea) {
+            contentArea.innerHTML = this.renderContent();
+          }
+          this.mountContent();
+        }
+      });
+    });
   }
 
-  private refresh(): void {
-    const contentArea = document.querySelector("#content-area")!;
-    const tabBarContainer = document.querySelector(".tab-bar-container")!;
-    contentArea.innerHTML = this.renderCurrent();
-    tabBarContainer.innerHTML = TabBar.render(this.tabs, this.activeTab || "", true);
-    this.attachTabBar();
-    this.mountCurrent();
+  private updateNavDots(): void {
+    document.querySelectorAll(".bottom-nav-dot").forEach(dot => {
+      dot.classList.toggle("active", (dot as HTMLElement).dataset.view === this.currentRootView);
+    });
   }
 
-  // Add a new landing page tab (shows in tab bar but doesn't switch to it)
-  private addNewTab(): void {
-    const id = `tab-${Date.now()}`;
-    this.tabs.push({ id, title: "New Tab", type: "chat", icon: "chat" });
-    // Don't set activeTab - stay on current page
-    this.updateTabBar();
-    this.refresh();
-  }
+  private mountContent(): void {
+    const tab = this.tabs.find(t => t.id === this.activeTab);
+    if (!tab) return;
 
-  // Open a specific feature tab
-  addTab(type: TabType): void {
-    const titles: Record<TabType, string> = {
-      chat: "Chat",
-      browser: "Browser",
-      settings: "Settings",
-    };
-    const id = `tab-${Date.now()}`;
-    this.tabs.push({ id, title: titles[type], type, icon: type });
-    this.activeTab = id;
-    this.updateTabBar();
-    this.refresh();
-  }
-
-  private closeTab(id: string): void {
-    const idx = this.tabs.findIndex((t) => t.id === id);
-    if (idx === -1) return;
-
-    this.tabs.splice(idx, 1);
-
-    if (this.activeTab === id) {
-      this.activeTab = this.tabs.length > 0 ? this.tabs[Math.max(0, idx - 1)].id : null;
+    if (tab.type === "landing") {
+      switch (this.currentRootView) {
+        case "dashboard":
+          mountDashboardView();
+          return;
+        case "workspaces":
+          WorkspacesView.mount();
+          return;
+        default:
+          LandingView.mount({
+            onAction: (mode, text) => {
+              switch (mode) {
+                case "Browser": 
+                  if (text) (window as any).__browserQuery = text;
+                  this.openTab("browser");
+                  this.mountContent();
+                  break;
+                case "Chat": this.openTab("chat"); this.mountContent(); break;
+                case "Tasks": this.openTab("tasks"); this.mountContent(); break;
+                case "Note": this.openTab("note"); this.mountContent(); break;
+                case "Settings": this.openTab("settings"); this.mountContent(); break;
+              }
+            },
+            onOpenSettings: () => { this.openTab("settings"); this.mountContent(); },
+          });
+          return;
+      }
     }
 
-    this.updateTabBar();
-    this.refresh();
+    if (tab.type === "chat") {
+      ChatView.mount({
+        selectedAgent: this.selectedAgent,
+        onAgentChange: (a) => { this.selectedAgent = a; }
+      }, AGENTS);
+    } else if (tab.type === "browser") {
+      BrowserView.mount();
+    } else if (tab.type === "settings") {
+      SettingsView.mount();
+    } else if (tab.type === "tasks") {
+      TasksView.mount();
+    }
   }
 }

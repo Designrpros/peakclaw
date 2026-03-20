@@ -1,11 +1,8 @@
-export type InputMode = "Dashboard" | "Workspaces" | "Chat" | "Browser" | "Note" | "Settings";
-export type PageView = "landing" | "dashboard" | "workspaces";
+export type InputMode = "Chat" | "Browser" | "Tasks" | "Note" | "Settings";
 
 interface LandingCallbacks {
   onAction: (mode: InputMode, text: string) => void;
   onOpenSettings: () => void;
-  onPageChange: (page: PageView) => void;
-  currentPage: PageView;
 }
 
 const state = {
@@ -14,7 +11,7 @@ const state = {
 };
 
 export class LandingView {
-  static render(page: PageView = "landing"): string {
+  static render(rootView: string = "landing"): string {
     return `
       <div class="landing-container">
         <div class="landing-vstack">
@@ -27,14 +24,13 @@ export class LandingView {
               placeholder="${this.getPlaceholder()}"
               rows="1"
               spellcheck="true"
-            >${state.inputText}</textarea>
+            ></textarea>
             
             <div class="landing-controls">
               <select id="landing-mode" class="landing-select">
-                <option value="Dashboard" ${state.selectedMode === "Dashboard" ? "selected" : ""}>Dashboard</option>
-                <option value="Workspaces" ${state.selectedMode === "Workspaces" ? "selected" : ""}>Workspaces</option>
                 <option value="Chat" ${state.selectedMode === "Chat" ? "selected" : ""}>Chat</option>
                 <option value="Browser" ${state.selectedMode === "Browser" ? "selected" : ""}>Browser</option>
+                <option value="Tasks" ${state.selectedMode === "Tasks" ? "selected" : ""}>Tasks</option>
                 <option value="Note" ${state.selectedMode === "Note" ? "selected" : ""}>Note</option>
                 <option value="Settings" ${state.selectedMode === "Settings" ? "selected" : ""}>Settings</option>
               </select>
@@ -49,21 +45,14 @@ export class LandingView {
           
           <a href="#" class="landing-settings-link" id="go-settings">Settings</a>
         </div>
-        
-        <div class="landing-dots">
-          <span class="landing-dot ${page === 'landing' ? 'active' : ''}" data-page="landing" title="Landing"></span>
-          <span class="landing-dot ${page === 'dashboard' ? 'active' : ''}" data-page="dashboard" title="Dashboard"></span>
-          <span class="landing-dot ${page === 'workspaces' ? 'active' : ''}" data-page="workspaces" title="Workspaces"></span>
-        </div>
       </div>
     `;
   }
 
   static mount(callbacks: LandingCallbacks): void {
-    const input = document.getElementById("landing-input") as HTMLTextAreaElement;
-    const modeSelect = document.getElementById("landing-mode") as HTMLSelectElement;
-    const submitBtn = document.getElementById("landing-submit")!;
-    const settingsLink = document.getElementById("go-settings")!;
+    const input = document.getElementById("landing-input") as HTMLTextAreaElement | null;
+    const modeSelect = document.getElementById("landing-mode") as HTMLSelectElement | null;
+    const submitBtn = document.getElementById("landing-submit") as HTMLButtonElement | null;
 
     const autoResize = () => {
       if (!input) return;
@@ -73,48 +62,42 @@ export class LandingView {
 
     const updateUI = () => {
       autoResize();
-      const isLaunchMode = ["Settings", "Dashboard", "Workspaces"].includes(state.selectedMode);
-      const hasContent = input.value.trim().length > 0;
-      (submitBtn as HTMLButtonElement).disabled = !(hasContent || isLaunchMode);
+      if (submitBtn) submitBtn.disabled = !input?.value?.trim();
     };
 
-    input?.addEventListener("input", () => {
-      state.inputText = input.value;
-      updateUI();
-    });
-
-    input?.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        if (!submitBtn.hasAttribute("disabled")) {
-          submitBtn.click();
+    if (input) {
+      input.addEventListener("input", () => {
+        state.inputText = input.value;
+        updateUI();
+      });
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          if (submitBtn && !submitBtn.disabled) submitBtn.click();
         }
-      }
-    });
+      });
+    }
 
-    modeSelect?.addEventListener("change", () => {
-      state.selectedMode = modeSelect.value as InputMode;
-      input.placeholder = this.getPlaceholder();
-      updateUI();
-    });
+    if (modeSelect) {
+      modeSelect.addEventListener("change", () => {
+        state.selectedMode = modeSelect.value as InputMode;
+        if (input) input.placeholder = this.getPlaceholder();
+        updateUI();
+      });
+    }
 
-    submitBtn.addEventListener("click", () => {
-      callbacks.onAction(state.selectedMode, input.value.trim());
-      input.value = "";
-      state.inputText = "";
-      updateUI();
-    });
+    if (submitBtn) {
+      submitBtn.addEventListener("click", () => {
+        callbacks.onAction(state.selectedMode, input?.value?.trim() || "");
+        if (input) input.value = "";
+        state.inputText = "";
+        updateUI();
+      });
+    }
 
-    settingsLink.addEventListener("click", (e) => {
+    document.getElementById("go-settings")?.addEventListener("click", (e) => {
       e.preventDefault();
       callbacks.onOpenSettings();
-    });
-
-    document.querySelectorAll(".landing-dot").forEach((dot) => {
-      dot.addEventListener("click", () => {
-        const page = dot.getAttribute("data-page") as PageView;
-        callbacks.onPageChange(page);
-      });
     });
 
     requestAnimationFrame(() => {
@@ -125,10 +108,9 @@ export class LandingView {
 
   private static getPlaceholder(): string {
     switch (state.selectedMode) {
-      case "Dashboard": return "Go to Dashboard...";
-      case "Workspaces": return "Manage Workspaces...";
-      case "Chat": return "Send a message to Alcatelz...";
+      case "Chat": return "Send a message...";
       case "Browser": return "Enter URL to open...";
+      case "Tasks": return "Create or open tasks...";
       case "Note": return "Create a new note...";
       case "Settings": return "Open Settings...";
       default: return "What would you like to do?";

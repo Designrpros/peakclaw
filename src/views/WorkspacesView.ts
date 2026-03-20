@@ -1,15 +1,7 @@
 export class WorkspacesView {
-  static render(showDots: boolean = false, _currentPage: string = "workspaces"): string {
+  static render(): string {
     return `
       <div class="view-workspaces">
-        ${showDots ? `
-        <div class="landing-dots landing-dots-fixed">
-          <span class="landing-dot" data-page="landing" title="Landing"></span>
-          <span class="landing-dot" data-page="dashboard" title="Dashboard"></span>
-          <span class="landing-dot active" data-page="workspaces" title="Workspaces"></span>
-        </div>
-        ` : ''}
-        
         <div class="view-header">
           <h1 class="view-title">Workspaces</h1>
           <span class="view-subtitle">Manage your saved workspace layouts</span>
@@ -44,23 +36,11 @@ export class WorkspacesView {
     `;
   }
 
-  static mount(callbacks?: { onPageChange?: (page: string) => void }): void {
-    // Attach page dot listeners if provided
-    if (callbacks?.onPageChange) {
-      document.querySelectorAll(".view-workspaces .landing-dot").forEach((dot) => {
-        dot.addEventListener("click", () => {
-          const page = dot.getAttribute("data-page");
-          if (page) callbacks.onPageChange!(page);
-        });
-      });
-    }
-
-    // Workspace card click handler
+  static mount(): void {
     document.querySelectorAll(".workspace-card").forEach((card) => {
       card.addEventListener("click", () => {
         const action = card.getAttribute("data-action");
         if (action === "create") {
-          // TODO: Implement workspace creation
           console.log("Create new workspace");
         }
       });

@@ -4,11 +4,22 @@ export interface Tab {
   id: string;
   title: string;
   type: TabType;
-  icon: string;
+  icon?: string;
   data?: unknown;
 }
 
-export type TabType = 'chat' | 'browser' | 'settings';
+export type TabType = 'root' | 'landing' | 'dashboard' | 'workspaces' | 'chat' | 'browser' | 'settings' | 'tasks' | 'note';
+
+export type InputMode = 'Browser' | 'Chat' | 'Tasks' | 'Note';
+
+export type PageView = 'landing' | 'dashboard' | 'workspaces';
+
+export interface LandingCallbacks {
+  onAction: (mode: InputMode, text?: string) => void;
+  onOpenSettings: () => void;
+  onPageChange: (page: PageView) => void;
+  currentPage: PageView;
+}
 
 export interface AgentState {
   name: string;
