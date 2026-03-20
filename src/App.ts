@@ -9,7 +9,6 @@ import { SettingsView } from "./views/SettingsView";
 import { TasksView } from "./views/TasksView";
 import { AGENTS } from "./lib/constants";
 import { renderDashboardView, mountDashboardView } from "./views/DashboardView";
-import { invoke } from "@tauri-apps/api/core";
 
 type RootView = "landing" | "dashboard" | "workspaces";
 type TabType = "landing" | "chat" | "browser" | "settings" | "tasks" | "note";

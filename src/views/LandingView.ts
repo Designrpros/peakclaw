@@ -11,7 +11,7 @@ const state = {
 };
 
 export class LandingView {
-  static render(rootView: string = "landing"): string {
+  static render(_rootView: string = "landing"): string {
     return `
       <div class="landing-container">
         <div class="landing-vstack">
