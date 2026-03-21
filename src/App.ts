@@ -63,7 +63,7 @@ export class App {
 
   private renderContent(): string {
     const tab = this.tabs.find(t => t.id === this.activeTab);
-    if (!tab || tab.type !== "landing") return ChatView.render(this.selectedAgent);
+    if (!tab) return "";
 
     switch (this.currentRootView) {
       case "dashboard": return renderDashboardView();
@@ -168,6 +168,7 @@ export class App {
     const tab = this.tabs.find(t => t.id === this.activeTab);
     if (!tab) return;
 
+    // For landing, dashboard, workspaces - use root view
     if (tab.type === "landing") {
       switch (this.currentRootView) {
         case "dashboard":
@@ -197,6 +198,7 @@ export class App {
       }
     }
 
+    // For specific tab types
     if (tab.type === "chat") {
       ChatView.mount({
         selectedAgent: this.selectedAgent,
