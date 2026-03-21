@@ -101,7 +101,25 @@ export class App {
         this.openTab("landing");
         this.mountContent();
       },
+      onThemeToggle: () => {
+        this.toggleTheme();
+      },
     });
+  }
+
+  public toggleTheme(): void {
+    const html = document.documentElement;
+    const current = html.getAttribute("data-theme");
+    const next = current === "dark" ? "light" : "dark";
+    html.setAttribute("data-theme", next);
+    localStorage.setItem("peak-theme", next);
+  }
+
+  public loadTheme(): void {
+    const saved = localStorage.getItem("peak-theme");
+    if (saved) {
+      document.documentElement.setAttribute("data-theme", saved);
+    }
   }
 
   private mountGlobalToolbar(): void {

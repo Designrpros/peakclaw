@@ -6,6 +6,7 @@ const dashTabs = [
   { id: "cron", label: "Cron", icon: "⏰" },
   { id: "agents", label: "Agents", icon: "🤖" },
   { id: "tools", label: "Tools & Skills", icon: "🔧" },
+  { id: "analytics", label: "Analytics", icon: "📈" },
   { id: "providers", label: "Providers", icon: "☁️" },
   { id: "memory", label: "Memory", icon: "🧠" },
   { id: "nodes", label: "Nodes", icon: "🖥️" },
@@ -72,6 +73,7 @@ function getTabContent(tabId: string): string {
     case "tools": return `<div class="dash-section"><h2>Tools & Skills</h2><div class="loading">Loading...</div></div>`;
     case "memory": return getMemoryContent();
     case "providers": return `<div class="dash-section"><h2>Providers</h2><div class="loading">Loading...</div></div>`;
+    case "analytics": return `<div class="dash-section"><h2>Analytics</h2><div class="loading">Loading...</div></div>`;
     case "nodes": return `<div class="dash-section"><h2>Nodes</h2><div class="loading">Loading...</div></div>`;
     default: return getOverviewContent();
   }
@@ -217,6 +219,7 @@ async function loadTabData(tabId: string) {
     case "tools": await loadToolsData(); break;
     case "memory": break;
     case "providers": await loadProvidersData(); break;
+    case "analytics": await loadAnalyticsData(); break;
     case "nodes": await loadNodesData(); break;
   }
 }
@@ -480,6 +483,54 @@ async function loadProvidersData() {
   } catch (e) {
     content.innerHTML = `<h2>Providers</h2><div class="empty">Error loading</div>`;
   }
+}
+
+async function loadAnalyticsData() {
+  const content = document.querySelector(".dash-section");
+  if (!content) return;
+  
+  const sites = [
+    { name: "Designr.Pro", id: "529344572", url: "https://designr.pro" },
+    { name: "Cost of Living", id: "529268720", url: "https://costofliving.no" },
+    { name: "Berentsen Labs", id: "529352404", url: "https://berentsenlabs.no" },
+    { name: "Wikits.net", id: "529368969", url: "https://wikits.net" },
+    { name: "PeakBrowser", id: "529328201", url: "" },
+  ];
+  
+  content.innerHTML = `<h2>Analytics</h2>
+    <div class="analytics-grid">
+      ${sites.map(site => `
+        <div class="analytics-card">
+          <div class="analytics-header">
+            <span class="analytics-name">${site.name}</span>
+            <span class="analytics-property">ID: ${site.id}</span>
+          </div>
+          <div class="analytics-stats" id="analytics-${site.id}">
+            <span class="analytics-loading">Loading...</span>
+          </div>
+          ${site.url ? `<a href="${site.url}" target="_blank" class="analytics-link">Visit →</a>` : ''}
+        </div>
+      `).join('')}
+    </div>`;
+  
+  sites.forEach(async site => {
+    const el = document.getElementById("analytics-" + site.id);
+    if (!el) return;
+    
+    try {
+      const result = await runCmd("export GOOGLE_ANALYTICS_PROPERTY_ID=" + site.id + " && export GOOGLE_APPLICATION_CREDENTIALS=/home/vegar/.config/ga4-key.json && node /home/vegar/.openclaw/scripts/ga4-stats.js 2>&1");
+      
+      const sessions = result.match(/sessions:\s*([0-9,]+)/)?.[1] || '0';
+      const users = result.match(/totalUsers:\s*([0-9,]+)/)?.[1] || '0';
+      const views = result.match(/screenPageViews:\s*([0-9,]+)/)?.[1] || '0';
+      
+      el.innerHTML = '<div class="analytics-stat"><span class="analytics-val">' + sessions + '</span><span class="analytics-label">Sessions</span></div>' +
+        '<div class="analytics-stat"><span class="analytics-val">' + users + '</span><span class="analytics-label">Users</span></div>' +
+        '<div class="analytics-stat"><span class="analytics-val">' + views + '</span><span class="analytics-label">Views</span></div>';
+    } catch (e) {
+      el.innerHTML = '<span class="analytics-error">Error</span>';
+    }
+  });
 }
 
 async function loadNodesData() {
