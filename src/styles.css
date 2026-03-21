@@ -3143,3 +3143,21 @@ body {
 .landing-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-bottom: 24px; }
 .landing-action-btn { background: var(--bg-secondary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 16px 24px; border-radius: 12px; font-size: 14px; cursor: pointer; transition: all 0.2s; }
 .landing-action-btn:hover { background: var(--accent-color); color: var(--bg-primary); border-color: var(--accent-color); transform: translateY(-2px); }
+
+/* Notes Setup Screen */
+.notes-setup { display: flex; align-items: center; justify-content: center; height: 100%; padding: 20px; }
+.notes-setup-card { text-align: center; max-width: 600px; }
+.notes-setup-icon { font-size: 64px; margin-bottom: 16px; }
+.notes-setup-title { font-size: 28px; font-weight: 700; margin: 0 0 8px; color: var(--text-primary); }
+.notes-setup-desc { font-size: 14px; color: var(--text-secondary); margin: 0 0 32px; }
+.notes-setup-options { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+.notes-setup-option { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: 16px; padding: 24px; width: 240px; cursor: pointer; text-align: center; transition: all 0.2s; }
+.notes-setup-option:hover { border-color: var(--accent-color); transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+.notes-setup-option-icon { font-size: 48px; margin-bottom: 12px; }
+.notes-setup-option-title { font-size: 18px; font-weight: 600; margin: 0 0 8px; color: var(--text-primary); }
+.notes-setup-option-desc { font-size: 12px; color: var(--text-secondary); margin: 0; line-height: 1.5; }
+.notes-back-btn { background: none; border: none; cursor: pointer; font-size: 18px; padding: 4px 8px; border-radius: 4px; color: var(--text-secondary); }
+.notes-back-btn:hover { background: var(--window-background-color); color: var(--text-primary); }
+.notes-sidebar-actions { display: flex; gap: 4px; }
+.notes-simple .notes-editor { display: flex; flex-direction: column; height: 100%; }
+.notes-simple .notes-textarea { flex: 1; border: none; resize: none; padding: 20px; font-size: 14px; font-family: inherit; background: var(--bg-primary); color: var(--text-primary); outline: none; }
