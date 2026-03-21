@@ -7,6 +7,7 @@ import { ChatView } from "./views/ChatView";
 import { BrowserView } from "./views/BrowserView";
 import { SettingsView } from "./views/SettingsView";
 import { TasksView } from "./views/TasksView";
+import { NotesView } from "./views/NotesView";
 import { AGENTS } from "./lib/constants";
 import { renderDashboardView, mountDashboardView } from "./views/DashboardView";
 
@@ -207,6 +208,8 @@ export class App {
       SettingsView.mount();
     } else if (tab.type === "tasks") {
       TasksView.mount();
+    } else if (tab.type === "note") {
+      NotesView.mount();
     }
   }
 }
