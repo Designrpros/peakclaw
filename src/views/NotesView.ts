@@ -60,21 +60,27 @@ export class NotesView {
         <div class="notes-setup" id="notes-setup">
           <div class="notes-setup-card">
             <div class="notes-setup-icon">📝</div>
-            <h2 class="notes-setup-title">Notes Workspace</h2>
-            <p class="notes-setup-desc">Velg hvordan du vil jobbe med notater</p>
+            <h2 class="notes-setup-title">Notes</h2>
             
-            <div class="notes-setup-options">
-              <button class="notes-setup-option" id="notes-vault">
-                <div class="notes-setup-option-icon">📁</div>
-                <div class="notes-setup-option-title">Vault</div>
-                <div class="notes-setup-option-desc">Velg en mappe for å organisere notater i tree view</div>
-              </button>
-              
-              <button class="notes-setup-option" id="notes-simple">
-                <div class="notes-setup-option-icon">📄</div>
-                <div class="notes-setup-option-title">Simple Note</div>
-                <div class="notes-setup-option-desc">Hurtignotat uten mappe - direkte markdown redigering</div>
-              </button>
+            <div class="notes-input-group">
+              <input type="text" class="notes-command-input" id="notes-input" placeholder="Skriv kommando..." autocomplete="off">
+              <div class="notes-menu" id="notes-menu">
+                <div class="notes-menu-item" data-value="vault">
+                  <span class="notes-menu-icon">📁</span>
+                  <span class="notes-menu-text">Vault</span>
+                  <span class="notes-menu-hint">Opprett vault med tree view</span>
+                </div>
+                <div class="notes-menu-item" data-value="simple">
+                  <span class="notes-menu-icon">📄</span>
+                  <span class="notes-menu-text">Simple</span>
+                  <span class="notes-menu-hint">Hurtignotat</span>
+                </div>
+              </div>
+              <button class="notes-send-btn" id="notes-send">→</button>
+            </div>
+            
+            <div class="notes-hints">
+              <span>Skriv <strong>vault</strong> eller <strong>simple</strong></span>
             </div>
           </div>
         </div>
@@ -134,13 +140,56 @@ export class NotesView {
   }
 
   private attachSetupHandlers(): void {
-    document.getElementById("notes-vault")?.addEventListener("click", () => {
-      this.initVault();
+    const input = document.getElementById("notes-input") as HTMLInputElement;
+    const menu = document.getElementById("notes-menu");
+    const sendBtn = document.getElementById("notes-send");
+
+    // Show menu when typing
+    input?.addEventListener("input", () => {
+      const value = input.value.toLowerCase().trim();
+      if (value.length > 0) {
+        menu?.classList.add("active");
+      } else {
+        menu?.classList.remove("active");
+      }
     });
 
-    document.getElementById("notes-simple")?.addEventListener("click", () => {
-      this.initSimple();
+    // Handle menu item clicks
+    document.querySelectorAll(".notes-menu-item").forEach(item => {
+      item.addEventListener("click", () => {
+        const value = (item as HTMLElement).dataset.value;
+        if (value === "vault") {
+          this.initVault();
+        } else if (value === "simple") {
+          this.initSimple();
+        }
+      });
     });
+
+    // Handle send button
+    sendBtn?.addEventListener("click", () => {
+      const value = input.value.toLowerCase().trim();
+      if (value === "vault") {
+        this.initVault();
+      } else if (value === "simple") {
+        this.initSimple();
+      }
+    });
+
+    // Handle enter key
+    input?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        const value = input.value.toLowerCase().trim();
+        if (value === "vault") {
+          this.initVault();
+        } else if (value === "simple") {
+          this.initSimple();
+        }
+      }
+    });
+
+    // Focus input
+    input?.focus();
   }
 
   private initVault(): void {

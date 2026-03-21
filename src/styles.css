@@ -3161,3 +3161,20 @@ body {
 .notes-sidebar-actions { display: flex; gap: 4px; }
 .notes-simple .notes-editor { display: flex; flex-direction: column; height: 100%; }
 .notes-simple .notes-textarea { flex: 1; border: none; resize: none; padding: 20px; font-size: 14px; font-family: inherit; background: var(--bg-primary); color: var(--text-primary); outline: none; }
+
+/* Notes Input Group */
+.notes-input-group { display: flex; flex-direction: column; gap: 0; width: 100%; max-width: 400px; margin: 0 auto; }
+.notes-command-input { width: 100%; padding: 14px 16px; font-size: 16px; border: 2px solid var(--border-color); border-radius: 12px 12px 0 0; background: var(--bg-secondary); color: var(--text-primary); outline: none; }
+.notes-command-input:focus { border-color: var(--accent-color); }
+.notes-menu { display: none; background: var(--bg-secondary); border: 2px solid var(--accent-color); border-top: none; border-radius: 0 0 12px 12px; overflow: hidden; }
+.notes-menu.active { display: block; }
+.notes-menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; transition: background 0.15s; }
+.notes-menu-item:hover { background: var(--window-background-color); }
+.notes-menu-icon { font-size: 20px; }
+.notes-menu-text { font-weight: 600; color: var(--text-primary); }
+.notes-menu-hint { margin-left: auto; font-size: 12px; color: var(--text-secondary); }
+.notes-send-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: var(--accent-color); border: none; color: white; width: 36px; height: 36px; border-radius: 8px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+.notes-input-group { position: relative; }
+.notes-command-input { padding-right: 56px; }
+.notes-hints { margin-top: 16px; font-size: 13px; color: var(--text-secondary); }
+.notes-hints strong { color: var(--text-primary); }
