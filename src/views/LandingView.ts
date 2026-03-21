@@ -17,6 +17,21 @@ export class LandingView {
         <div class="landing-vstack">
           <img src="/assets/Peak-icon.png" alt="PeakClaw" class="landing-logo">
           
+          <div class="landing-actions">
+            <button class="landing-action-btn" id="action-note">
+              📝 Notes
+            </button>
+            <button class="landing-action-btn" id="action-chat">
+              💬 Chat
+            </button>
+            <button class="landing-action-btn" id="action-browser">
+              🌐 Browser
+            </button>
+            <button class="landing-action-btn" id="action-tasks">
+              ✅ Tasks
+            </button>
+          </div>
+          
           <div class="landing-input-box">
             <textarea 
               id="landing-input" 
@@ -50,6 +65,12 @@ export class LandingView {
   }
 
   static mount(callbacks: LandingCallbacks): void {
+    // Action buttons
+    document.getElementById("action-note")?.addEventListener("click", () => callbacks.onAction("Note", ""));
+    document.getElementById("action-chat")?.addEventListener("click", () => callbacks.onAction("Chat", ""));
+    document.getElementById("action-browser")?.addEventListener("click", () => callbacks.onAction("Browser", ""));
+    document.getElementById("action-tasks")?.addEventListener("click", () => callbacks.onAction("Tasks", ""));
+
     const input = document.getElementById("landing-input") as HTMLTextAreaElement | null;
     const modeSelect = document.getElementById("landing-mode") as HTMLSelectElement | null;
     const submitBtn = document.getElementById("landing-submit") as HTMLButtonElement | null;
